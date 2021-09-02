@@ -141,7 +141,11 @@ def create_order(pair, direction, quantity, spend, confirm):
 @click.option('--symbol', required=True, help='Symbol to withdraw')
 @click.option('--confirm', default=False, help='If not set, do not execute', is_flag=True)
 def withdraw(quantity, wallet, tag, symbol, confirm):
-    """ Withdraw funds to wallet address """
+    """ Withdraw XLM funds to wallet address """
+    if not symbol == 'XLM':
+        click.secho('currently only XLM withdrawals are supported', fg='red')
+        return
+
     tagline = f'using tag {tag}' if tag else ''
     click.secho(f'Going to withdraw {quantity} {symbol} to wallet at {wallet} {tagline}', fg='green')
 
@@ -151,7 +155,7 @@ def withdraw(quantity, wallet, tag, symbol, confirm):
       "cryptoAddress": wallet,
       "cryptoAddressTag": tag
     }
-    click.echo(payload)
+
     if confirm:
         r = _call_x('POST', '/withdrawals', payload)
         click.secho(str(r), fg='red')
