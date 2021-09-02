@@ -172,7 +172,8 @@ def get_withdrawals():
     for d in ['open', 'closed']:
         data = _call_x('GET', '/withdrawals/' + d, '')
         for line in data:
-            click.secho(cols.format(line['status'], line['createdAt'], line['completedAt'], line['currencySymbol'], line['quantity'], line['target'], line['cryptoAddress']))
+            completed = line['completedAt'] if 'completedAt' in line else ''
+            click.secho(cols.format(line['status'], line['createdAt'], completed, line['currencySymbol'], line['quantity'], line['target'], line['cryptoAddress']))
 
 
 if __name__ == '__main__':
