@@ -109,9 +109,14 @@ def create_order(pair, direction, quantity, spend, confirm):
 
     if spend:
         quantity = spend / limit
-    target, base = pair.split('-')
+
+    if direction.upper() == 'BUY':
+        target, base = pair.split('-')
+    else:
+        base, target = pair.split('-')
+
     spend = limit * quantity
-    click.secho(f'Going to {direction.lower()} {quantity} {target} at {limit} {base}, spending {spend} {base}', fg='green')
+    click.secho(f'Going to buy {quantity} {target} at {limit} {base}, spending {spend} {base}', fg='green')
     payload = {
       "marketSymbol": pair,
       "direction": direction,
