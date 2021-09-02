@@ -150,7 +150,7 @@ def withdraw(quantity, wallet, tag, symbol, confirm):
     click.secho(f'Going to withdraw {quantity} {symbol} to wallet at {wallet} {tagline}', fg='green')
 
     payload = {
-      "currentcySymbol": symbol,
+      "currencySymbol": symbol,
       "quantity": quantity,
       "cryptoAddress": wallet,
       "cryptoAddressTag": tag
