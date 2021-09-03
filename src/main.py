@@ -60,8 +60,8 @@ def get_balances():
 @cli.command('orders')
 def get_orders():
     """ List all open and closed orders """
-    cols = "{:<10} {:<10} {:<10} {:<10} {:<15} {:<20} {:<20} {:<20} {:<30} {:<30}"
-    click.secho(cols.format("STATUS", "DIRECTION", "SYMBOL", "TYPE", "PRICE", "QUANTITY", "FILLED", "FEES", "UPDATED", "CLOSED"), fg='green')
+    cols = "{:<8} {:<10} {:<10} {:<8} {:<15} {:<15} {:<15} {:<15} {:<25} {:<25} {:<40}"
+    click.secho(cols.format("STATUS", "DIRECTION", "SYMBOL", "TYPE", "PRICE", "QUANTITY", "FILLED", "FEES", "UPDATED", "CLOSED", "ID"), fg='green')
     for direction in ['open', 'closed']:
         query = '?pageSize=10' if direction == 'closed' else ''
         r = _call_x('GET', '/orders/' + direction + query, '')
@@ -69,7 +69,7 @@ def get_orders():
             updated = '' if 'closedAt' in o else o['updatedAt']
             closed = o['closedAt'] if 'closedAt' in o else ''
             price = o['limit'] if 'limit' in o else '' # TODO
-            click.secho(cols.format(o['status'], o['direction'], o['marketSymbol'], o['type'], price, o['quantity'], o['fillQuantity'], o['commission'], updated, closed))
+            click.secho(cols.format(o['status'], o['direction'], o['marketSymbol'], o['type'], price, o['quantity'], o['fillQuantity'], o['commission'], updated, closed, o['id']))
 
 
 def _get_ticker_data(symbol):
