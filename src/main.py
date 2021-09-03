@@ -36,6 +36,8 @@ def _call_x(method, endpoint, payload):
       return requests.get(url, headers=headers).json()
     if method == 'POST':
       return requests.post(url, headers=headers, json=payload).json()
+    if method == 'DELETE':
+      return requests.delete(url, headers=headers).json()
 
 
 @click.group()
@@ -70,6 +72,18 @@ def get_orders():
             closed = o['closedAt'] if 'closedAt' in o else ''
             price = o['limit'] if 'limit' in o else '' # TODO
             click.secho(cols.format(o['status'], o['direction'], o['marketSymbol'], o['type'], price, o['quantity'], o['fillQuantity'], o['commission'], updated, closed, o['id']))
+
+
+@cli.command('delete')
+@click.option('--order', required=True, help='Order to delete')
+def delete_order(order):
+    r = _call_x('DELETE', f'/orders/{order}', '')
+    if 'code' in r:
+        reason = r['code']
+        click.secho(f'failed to delete order: {reason}', fg='red')
+    else:
+        status = r['status']
+        click.secho(f'status changed: {status}', fg='red')
 
 
 def _get_ticker_data(symbol):
