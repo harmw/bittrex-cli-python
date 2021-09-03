@@ -97,11 +97,15 @@ def get_ticket(symbol):
 @click.option('--direction', default='BUY', show_default=True, help='Buy or sell.')
 @click.option('--quantity', help='Quantity to buy or sell', type=float)
 @click.option('--spend', help='Spend this amount', type=float)
+@click.option('--price', help='Limit price', type=float)
 @click.option('--confirm', default=False, help='If not set, do not execute', is_flag=True)
-def create_order(pair, direction, quantity, spend, confirm):
+def create_order(pair, direction, quantity, spend, confirm, price):
     """ Create a new order """
     market = _get_ticker_data(pair)
-    limit = float(market['askRate'])
+    if price:
+        limit = price
+    else:
+        limit = float(market['askRate'])
 
     if not spend and not quantity:
         click.secho('need one of --quantity or --spend', fg='red')
