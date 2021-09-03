@@ -60,11 +60,18 @@ def get_balances():
 
 
 @cli.command('orders')
-def get_orders():
+@click.option('--direction', help='Only list open or closed orders')
+def get_orders(direction):
     """ List all open and closed orders """
     cols = "{:<8} {:<10} {:<10} {:<8} {:<15} {:<15} {:<15} {:<15} {:<25} {:<25} {:<40}"
     click.secho(cols.format("STATUS", "DIRECTION", "SYMBOL", "TYPE", "PRICE", "QUANTITY", "FILLED", "FEES", "UPDATED", "CLOSED", "ID"), fg='green')
-    for direction in ['open', 'closed']:
+
+    if direction:
+        directions = [direction]
+    else:
+        directions = ['open', 'closed']
+
+    for direction in directions:
         query = '?pageSize=10' if direction == 'closed' else ''
         r = _call_x('GET', '/orders/' + direction + query, '')
         for o in r:
