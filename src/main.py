@@ -45,23 +45,32 @@ def cli():
     """ Simple Bittrex cli, have fun """
 
 
-@cli.command('balances')
-@click.option('--symbol', help='Symbol to list')
-def get_balances(symbol):
-    """ List all or specific balances """
+def _get_balance(symbol):
     specific = '/'+symbol if symbol else ''
     balance = _call_x('GET', '/balances' + specific, '')
 
     if 'code' in balance:
         reason = balance['code']
-        click.secho(f'could not fetch balance: {reason}', fg='red')
-        return
+        return {'error': f'could not fetch balance: {reason}'}
 
     if isinstance(balance, list):
         r = balance
     else:
         r = []
         r.append(balance)
+    return r
+
+
+@cli.command('balances')
+@click.option('--symbol', help='Symbol to list')
+def get_balances(symbol):
+    """ List all or specific balances """
+    r = _get_balance(symbol)
+
+    if 'error' in r:
+        reason = r['error']
+        click.secho(f'could not fetch balance: {reason}', fg='red')
+        return
 
     cols = "{:>10} {:>15} {:>20} {:>30}"
     click.secho(cols.format('SYMBOL', 'TOTAL', 'AVAILABLE', 'UPDATED'), fg='green')
@@ -217,6 +226,13 @@ def get_withdrawals():
         for line in data:
             completed = line['completedAt'] if 'completedAt' in line else ''
             click.secho(cols.format(line['status'], line['createdAt'], completed, line['currencySymbol'], line['quantity'], line['target'], line['cryptoAddress']))
+
+
+@cli.command('execute')
+def execute():
+    """ Execute some fancy stuff """
+    r = _get_balance('EUR')
+    print(r)
 
 
 if __name__ == '__main__':
