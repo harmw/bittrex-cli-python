@@ -46,9 +46,22 @@ def cli():
 
 
 @cli.command('balances')
-def get_balances():
-    """ List all balances """
-    r = _call_x('GET', '/balances', '')
+@click.option('--symbol', help='Symbol to list')
+def get_balances(symbol):
+    """ List all or specific balances """
+    specific = '/'+symbol if symbol else ''
+    balance = _call_x('GET', '/balances' + specific, '')
+
+    if 'code' in balance:
+        reason = balance['code']
+        click.secho(f'could not fetch balance: {reason}', fg='red')
+        return
+
+    if isinstance(balance, list):
+        r = balance
+    else:
+        r = []
+        r.append(balance)
 
     cols = "{:>10} {:>15} {:>20} {:>30}"
     click.secho(cols.format('SYMBOL', 'TOTAL', 'AVAILABLE', 'UPDATED'), fg='green')
