@@ -135,24 +135,12 @@ def get_ticket(symbol):
     click.secho(cols.format(r['symbol'], r['lastTradeRate'], r['bidRate'], r['askRate']))
 
 
-@cli.command('create')
-@click.option('--pair', required=True, help='Trade pair (ticker)')
-@click.option('--direction', default='BUY', show_default=True, help='Buy or sell.')
-@click.option('--quantity', help='Quantity to buy or sell', type=float)
-@click.option('--spend', help='Spend this amount', type=float)
-@click.option('--price', help='Limit price', type=float)
-@click.option('--confirm', default=False, help='If not set, do not execute', is_flag=True)
-def create_order(pair, direction, quantity, spend, confirm, price):
-    """ Create a new order """
+def _create_order(pair, direction, quantity=None, spend=None, confirm=False, price=None):
     market = _get_ticker_data(pair)
     if price:
         limit = price
     else:
         limit = float(market['askRate'])
-
-    if not spend and not quantity:
-        click.secho('need one of --quantity or --spend', fg='red')
-        return
 
     if spend:
         quantity = spend / limit
@@ -163,7 +151,6 @@ def create_order(pair, direction, quantity, spend, confirm, price):
         base, target = pair.split('-')
 
     spend = limit * quantity
-    click.secho(f'Going to buy {quantity} {target} at {limit} {base}, spending {spend} {base}', fg='green')
     payload = {
       "marketSymbol": pair,
       "direction": direction,
@@ -173,17 +160,41 @@ def create_order(pair, direction, quantity, spend, confirm, price):
       "timeInForce": "GOOD_TIL_CANCELLED",
       "useAwards": "true"
     }
-    #click.echo(payload)
+    r = {}
+    r['msg'] = f'Going to buy {quantity} {target} at {limit} {base}, spending {spend} {base}'
+
     if confirm:
         r = _call_x('POST', '/orders', payload)
         if 'code' in r:
-            reason = r['code']
-            click.secho(f'Failed with reason: {reason}', fg='red')
+            r['error'] = r['code']
         else:
-            result = f"> status: {r['status']} // updated: {r['updatedAt']} // fee: {r['commission']} // filled: {r['fillQuantity']}"
-            click.secho(result, fg='red')
+            r['success'] = f"> status: {r['status']} // updated: {r['updatedAt']} // fee: {r['commission']} // filled: {r['fillQuantity']}"
+            r['order_id'] = r['id']
     else:
-        click.secho('no action taken, use --confirm to create this order', fg='red')
+        r['error'] = 'missing confirmation'
+    return r
+
+
+@cli.command('create')
+@click.option('--pair', required=True, help='Trade pair (ticker)')
+@click.option('--direction', default='BUY', show_default=True, help='Buy or sell.')
+@click.option('--quantity', help='Quantity to buy or sell', type=float)
+@click.option('--spend', help='Spend this amount', type=float)
+@click.option('--price', default=0, help='Limit price', type=float)
+@click.option('--confirm', default=False, help='If not set, do not execute', is_flag=True)
+def create_order(pair, direction, quantity, spend, confirm, price):
+    """ Create a new order """
+    if not spend and not quantity:
+        click.secho('need one of --quantity or --spend', fg='red')
+        return
+
+    r = _create_order(pair, direction, quantity, spend, confirm, price)
+    click.secho(r['msg'], fg='green')
+    if 'error' in r:
+        reason = r['error']
+        click.secho(f'Failed with reason: {reason}', fg='red')
+    else:
+        click.secho(r['success'], fg='green')
 
 
 @cli.command('withdraw')
