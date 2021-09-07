@@ -130,11 +130,12 @@ def _get_ticker_data(symbol):
 @click.option('--symbol', required=True, help='Symbol to view (example: ADA-EUR)')
 def get_ticket(symbol):
     """ Get information about a ticker """
-    cols = '{:<10} {:<20} {:<20} {:<20}'
-    click.secho(cols.format('SYMBOL', 'LASTTRADERATE', 'BIDRATE', 'ASKRATE'), fg='green')
+    cols = '{:<10} {:<20} {:<20} {:<20} {:<20}'
+    click.secho(cols.format('SYMBOL', 'LASTTRADERATE', 'BIDRATE', 'ASKRATE', 'SPREAD'), fg='green')
 
     r = _get_ticker_data(symbol)
-    click.secho(cols.format(r['symbol'], r['lastTradeRate'], r['bidRate'], r['askRate']))
+    spread = int((float(r['askRate']) - float(r['bidRate'])) * 10000) / 10000
+    click.secho(cols.format(r['symbol'], r['lastTradeRate'], r['bidRate'], r['askRate'], spread))
 
 
 def _create_order(pair, direction, quantity=None, spend=None, confirm=False, price=None):
