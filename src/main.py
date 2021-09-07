@@ -7,6 +7,8 @@ import requests
 import sys
 import time
 
+from pyhocon import ConfigFactory
+
 
 api_key = os.getenv('API_KEY')
 api_private_key = os.getenv('PRIVATE_KEY')
@@ -240,10 +242,65 @@ def get_withdrawals():
 
 
 @cli.command('execute')
-def execute():
+@click.option('--confirm', default=False, help='If not set, do not execute', is_flag=True)
+def execute(confirm):
     """ Execute some fancy stuff """
-    r = _get_balance('EUR')
-    print(r)
+    try:
+        conf = ConfigFactory.parse_file('allocations.conf')
+    except Exception as e:
+        click.secho(f'Failed to load config: {e}', fg='red')
+        return
+
+    trigger_symbol = conf['trigger']['symbol']
+    trigger_value = 0 #float(conf['trigger']['value'])
+    r = _get_balance(trigger_symbol)[0]
+    avail = float(r['available'])
+
+    if avail >= trigger_value:
+        click.secho(f'Found {avail} EUR in balance, time to invest', fg='green')
+
+        allocations = conf['allocations']
+        for alloc in allocations:
+            pair = alloc['pair']
+            percentage = alloc['perc']
+            base = pair.split('-')[1]
+            r = _get_balance(base)[0]
+            avail = float(r['available'])
+
+            spend = avail * float(percentage/100)
+            click.secho(f'Getting {percentage}% in {pair}, spending {spend} {base}', fg='green')
+
+            r = _create_order(pair, 'buy', spend=spend, confirm=confirm)
+            click.secho(r['msg'], fg='green')
+            if 'error' in r:
+                reason = r['error']
+                click.secho(f'Failed with reason: {reason}', fg='red')
+            else:
+                click.secho(r['success'], fg='green')
+                order_id = r['order_id']
+
+                n = 0
+                while n < 60:
+                    r = _call_x('GET', '/orders/' + order_id, '')
+                    if r['status'] == 'CLOSED':
+                        click.secho('Order closed', fg='green')
+                        break
+                    time.sleep(1)
+                    n += 1
+
+        if 'withdrawals' in conf:
+            withdrawals = conf['withdrawals']
+            for w in withdrawals:
+                symbol = w['symbol']
+                wallet = w['wallet']
+                memo = w['memo']
+                r = _get_balance(symbol)[0]
+                avail = float(r['available'])
+                click.secho(f'Withdraw {avail} {symbol} to external wallet {wallet} using memo {memo}', fg='green')
+                # r = _withdraw()
+
+    else:
+        click.secho(f'Insufficient funds, found {avail} of {trigger_symbol} but need {trigger_value}', fg='red')
 
 
 if __name__ == '__main__':
