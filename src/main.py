@@ -163,19 +163,19 @@ def _create_order(pair, direction, quantity=None, spend=None, confirm=False, pri
       "timeInForce": "GOOD_TIL_CANCELLED",
       "useAwards": "true"
     }
-    r = {}
-    r['msg'] = f'Going to buy {quantity} {target} at {limit} {base}, spending {spend} {base}'
+    res = {}
+    res['msg'] = f'Going to buy {quantity} {target} at {limit} {base}, spending {spend} {base}'
 
     if confirm:
         r = _call_x('POST', '/orders', payload)
         if 'code' in r:
-            r['error'] = r['code']
+            res['error'] = r['code']
         else:
-            r['success'] = f"> status: {r['status']} // updated: {r['updatedAt']} // fee: {r['commission']} // filled: {r['fillQuantity']}"
-            r['order_id'] = r['id']
+            res['success'] = f"> status: {r['status']} // updated: {r['updatedAt']} // fee: {r['commission']} // filled: {r['fillQuantity']}"
+            res['order_id'] = r['id']
     else:
-        r['error'] = 'missing confirmation'
-    return r
+        res['error'] = 'missing confirmation'
+    return res
 
 
 @cli.command('create')
