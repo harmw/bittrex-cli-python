@@ -85,7 +85,8 @@ def get_balances(symbol):
 
 @cli.command('orders')
 @click.option('--status', help='Only list open or closed orders')
-def get_orders(status):
+@click.option('--symbol', help='Filter orders in specific market only')
+def get_orders(status, symbol):
     """ List all open and closed orders """
     cols = "{:<8} {:<10} {:<10} {:<8} {:<15} {:<15} {:<15} {:<15} {:<25} {:<25} {:<40}"
     click.secho(cols.format("STATUS", "DIRECTION", "SYMBOL", "TYPE", "PRICE", "QUANTITY", "FILLED", "FEES", "UPDATED", "CLOSED", "ID"), fg='green')
@@ -96,8 +97,13 @@ def get_orders(status):
         statuses = ['open', 'closed']
 
     for _status in statuses:
-        query = '?pageSize=10' if _status == 'closed' else ''
+        query = f'?marketSymbol={symbol}' if symbol else ''
         r = _call_x('GET', '/orders/' + _status + query, '')
+        if 'code' in r:
+            reason = r['code']
+            click.secho(f'failed: {reason}', fg='red')
+            break
+
         for o in r:
             updated = '' if 'closedAt' in o else o['updatedAt']
             closed = o['closedAt'] if 'closedAt' in o else ''
