@@ -144,12 +144,13 @@ def get_ticket(symbol):
     click.secho(cols.format(r['symbol'], r['lastTradeRate'], r['bidRate'], r['askRate'], spread))
 
 
-def _create_order(pair, direction, quantity=None, spend=None, confirm=False, price=None):
+def _create_order(pair, direction, quantity=None, spend=None, confirm=False, price=None, askbid='ask'):
     market = _get_ticker_data(pair)
     if price:
         limit = price
     else:
-        limit = float(market['askRate'])
+        ask_or_bid = 'bidRate' if askbid == 'bid' else 'askRate'
+        limit = float(market[ask_or_bid])
 
     if spend:
         quantity = spend / limit
@@ -270,6 +271,7 @@ def execute(confirm):
         for alloc in allocations:
             pair = alloc['pair']
             percentage = alloc['perc']
+            ask_or_bid = alloc['ask_or_bid'] if 'ask_or_bid' in alloc else None
             base = pair.split('-')[1]
             r = _get_balance(base)[0]
             avail = float(r['available'])
@@ -277,7 +279,7 @@ def execute(confirm):
             spend = avail * float(percentage/100)
             click.secho(f'Getting {percentage}% in {pair}, spending {spend} {base}', fg='green')
 
-            r = _create_order(pair, 'buy', spend=spend, confirm=confirm)
+            r = _create_order(pair, 'buy', spend=spend, confirm=confirm, askbid=ask_or_bid)
             click.secho(r['msg'], fg='green')
             if 'error' in r:
                 reason = r['error']
