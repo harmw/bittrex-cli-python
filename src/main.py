@@ -264,7 +264,7 @@ def execute(confirm):
         return
 
     trigger_symbol = conf['trigger']['symbol']
-    trigger_value = 0 #float(conf['trigger']['value'])
+    trigger_value = float(conf['trigger']['value'])
     r = _get_balance(trigger_symbol)[0]
     avail = float(r['available'])
 
