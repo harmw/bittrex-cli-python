@@ -138,7 +138,7 @@ def _get_ticker_data(symbol):
 
 @cli.command('ticker')
 @click.option('--symbol', required=True, help='Symbol to view (example: ADA-EUR)')
-def get_ticket(symbol):
+def get_ticker(symbol):
     """ Get information about a ticker """
     cols = '{:<10} {:<20} {:<20} {:<20} {:<20}'
     click.secho(cols.format('SYMBOL', 'LASTTRADERATE', 'BIDRATE', 'ASKRATE', 'SPREAD'), fg='green')
