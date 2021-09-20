@@ -45,6 +45,9 @@ def _call_x(method, endpoint, payload):
 @click.group()
 def cli():
     """ Simple Bittrex cli, have fun """
+    if not (api_key or api_private_key):
+        click.secho('Make sure to configure API_KEY and PRIVATE_KEY in your env', fg='red')
+        sys.exit()
 
 
 def _get_balance(symbol):
