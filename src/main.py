@@ -117,6 +117,7 @@ def get_orders(status, symbol):
 @cli.command('delete')
 @click.option('--order', required=True, help='Order to delete')
 def delete_order(order):
+    """ Delete an order """
     r = _call_x('DELETE', f'/orders/{order}', '')
     if 'code' in r:
         reason = r['code']
