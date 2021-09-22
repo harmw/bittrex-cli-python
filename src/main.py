@@ -211,6 +211,22 @@ def create_order(pair, direction, quantity, spend, confirm, price):
         click.secho(r['success'], fg='green')
 
 
+def _withdraw(symbol, quantity, wallet, tag):
+    tagline = f'using tag {tag}' if tag else ''
+    click.secho(f'Going to withdraw {quantity} {symbol} to wallet at {wallet} {tagline}', fg='green')
+
+    payload = {
+        "currencySymbol": symbol,
+        "quantity": quantity,
+        "cryptoAddress": wallet,
+        "cryptoAddressTag": tag
+    }
+    r = _call_x('POST', '/withdrawals', payload)
+    if 'status' in r:
+        return r['status']
+    return r
+
+
 @cli.command('withdraw')
 @click.option('--quantity', required=True, help='Quantity to withdraw')
 @click.option('--wallet', required=True, help='Destination wallet address')
@@ -223,18 +239,8 @@ def withdraw(quantity, wallet, tag, symbol, confirm):
         click.secho('currently only XLM withdrawals are supported', fg='red')
         return
 
-    tagline = f'using tag {tag}' if tag else ''
-    click.secho(f'Going to withdraw {quantity} {symbol} to wallet at {wallet} {tagline}', fg='green')
-
-    payload = {
-      "currencySymbol": symbol,
-      "quantity": quantity,
-      "cryptoAddress": wallet,
-      "cryptoAddressTag": tag
-    }
-
     if confirm:
-        r = _call_x('POST', '/withdrawals', payload)
+        r = _withdraw(symbol, quantity, wallet, tag)
         click.secho(str(r), fg='red')
     else:
         click.secho('no action taken, use --confirm to withdraw', fg='red')
@@ -308,9 +314,12 @@ def execute(confirm):
                 wallet = w['wallet']
                 memo = w['memo']
                 r = _get_balance(symbol)[0]
-                avail = float(r['available'])
-                click.secho(f'Withdraw {avail} {symbol} to external wallet {wallet} using memo {memo}', fg='green')
-                # r = _withdraw()
+                quantity = float(r['available'])
+                if confirm:
+                    result = str(_withdraw(symbol, quantity, wallet, memo))
+                    click.secho(f'> status: {result}', fg='red')
+                else:
+                    click.secho(f'Skipping withdrawal of {symbol}: missing confirmation', fg='red')
 
     else:
         click.secho(f'Insufficient funds, found {avail} of {trigger_symbol} but need {trigger_value}', fg='red')
