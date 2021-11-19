@@ -234,11 +234,7 @@ def _withdraw(symbol, quantity, wallet, tag):
 @click.option('--symbol', required=True, help='Symbol to withdraw')
 @click.option('--confirm', default=False, help='If not set, do not execute', is_flag=True)
 def withdraw(quantity, wallet, tag, symbol, confirm):
-    """ Withdraw XLM funds to wallet address """
-    if not symbol == 'XLM':
-        click.secho('currently only XLM withdrawals are supported', fg='red')
-        return
-
+    """ Withdraw funds to wallet address """
     if confirm:
         r = _withdraw(symbol, quantity, wallet, tag)
         click.secho(str(r), fg='red')
