@@ -279,8 +279,12 @@ def execute(confirm):
             percentage = alloc['perc']
             ask_or_bid = alloc['ask_or_bid'] if 'ask_or_bid' in alloc else None
             base = pair.split('-')[1]
-            r = _get_balance(base)[0]
-            avail = float(r['available'])
+
+            if base.upper() == 'EUR':
+                avail = trigger_value
+            else:
+                r = _get_balance(base)[0]
+                avail = float(r['available'])
 
             spend = avail * float(percentage/100)
             click.secho(f'Getting {percentage}% in {pair}, spending {spend} {base}', fg='green')
